@@ -48,7 +48,7 @@ with st.sidebar:
 
 st.title("🚀 Panel de Producción BYMAC3D")
 
-# --- NUEVA SECCIÓN: ESTADÍSTICAS DE PRODUCCIÓN (RESUMEN VISUAL) ---
+# --- NUEVA SECCIÓN: RESUMEN COMPACTO ---
 df_activos_stats = pd.read_sql_query("SELECT items_ready FROM pedidos WHERE estado != 'Terminado'", get_connection())
 
 if not df_activos_stats.empty:
@@ -67,14 +67,18 @@ if not df_activos_stats.empty:
             continue
 
     if conteo_total:
-        st.subheader("📊 Resumen de Piezas a Imprimir")
-        # Creamos columnas para que se vea como "chips" o una lista pegada
-        cols_stats = st.columns(len(conteo_total) if len(conteo_total) < 6 else 6)
-        for i, (item, total) in enumerate(conteo_total.items()):
+        st.subheader("📊 Producción Pendiente")
+        # Usamos markdown para crear una lista compacta con estilo
+        resumen_html = ""
+        for item, total in conteo_total.items():
             faltan = conteo_faltante.get(item, 0)
-            with cols_stats[i % 6]:
-                color = "green" if faltan == 0 else "orange"
-                st.metric(label=item, value=f"{total} total", delta=f"{faltan} faltan", delta_color="inverse")
+            if faltan > 0:
+                resumen_html += f"**{item}:** {faltan} faltantes (de {total} total) | "
+        
+        if resumen_html:
+            st.write(resumen_html[:-3]) # Sacamos el último separador
+        else:
+            st.success("✅ ¡Todas las piezas impresas!")
         st.divider()
 
 # --- SECCIÓN 1: CARGA DE PEDIDOS ---

@@ -48,7 +48,7 @@ with st.sidebar:
 
 st.title("🚀 Panel de Producción BYMAC3D")
 
-# --- NUEVA SECCIÓN: RESUMEN COMPACTO ---
+# --- NUEVA SECCIÓN: LISTA DE PRODUCCIÓN OPTIMIZADA ---
 df_activos_stats = pd.read_sql_query("SELECT items_ready FROM pedidos WHERE estado != 'Terminado'", get_connection())
 
 if not df_activos_stats.empty:
@@ -67,20 +67,22 @@ if not df_activos_stats.empty:
             continue
 
     if conteo_total:
-        st.subheader("📊 Producción Pendiente")
-        # Usamos markdown para crear una lista compacta con estilo
-        resumen_html = ""
-        for item, total in conteo_total.items():
-            faltan = conteo_faltante.get(item, 0)
-            if faltan > 0:
-                resumen_html += f"**{item}:** {faltan} faltantes (de {total} total) | "
+        st.subheader("📊 Lista de Impresión")
         
-        if resumen_html:
-            st.write(resumen_html[:-3]) # Sacamos el último separador
+        # Filtramos solo lo que falta para no llenar la pantalla de cosas listas
+        items_pendientes = {k: v for k, v in conteo_faltante.items() if v > 0}
+        
+        if items_pendientes:
+            # Dividimos en 4 columnas para que sea una lista ancha pero baja
+            cols = st.columns(4)
+            for i, (item, faltan) in enumerate(items_pendientes.items()):
+                total = conteo_total[item]
+                with cols[i % 4]:
+                    st.markdown(f"**{item}**")
+                    st.markdown(f"● Faltan: `{faltan}` / Total: `{total}`")
         else:
-            st.success("✅ ¡Todas las piezas impresas!")
+            st.success("✅ ¡No hay piezas pendientes de impresión!")
         st.divider()
-
 # --- SECCIÓN 1: CARGA DE PEDIDOS ---
 with st.expander("➕ Cargar Nuevo Pedido"):
     with st.form("nuevo_pedido", clear_on_submit=True):
